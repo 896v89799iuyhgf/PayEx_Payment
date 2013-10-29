@@ -1,6 +1,9 @@
 <?php
 if (!defined('_PS_VERSION_')) exit;
 
+include_once("confined.php");
+include_once("pxorder.php");
+
 class Payex extends PaymentModule
 {
     public function __construct()
@@ -37,7 +40,7 @@ class Payex extends PaymentModule
 
     public function uninstall()
     {
-        return parent::uninstall() && Configuration::deleteByName('PS_PAYEX') && Configuration::deleteByName('PS_PAYEX_ACC_NUM') && Configuration::deleteByName('PS_PAYEX_ENC_KEY') && Configuration::deleteByName('PS_PAYEX_RETURN_URL') && Configuration::deleteByName('PS_PAYEX_CANCEL_URL') && Configuration::deleteByName('PS_PAYEX_PX_ORDER') && Configuration::deleteByName('PS_PAYEX_PX_CONFINED');
+        return parent::uninstall() && Configuration::deleteByName('PS_PAYEX') && Configuration::deleteByName('PS_PAYEX_ACC_NUM') && Configuration::deleteByName('PS_PAYEX_ENC_KEY') && Configuration::deleteByName('PS_PAYEX_ENV')&& Configuration::deleteByName('PS_PAYEX_DESC');
     }
 
     public function getContent()
@@ -47,17 +50,13 @@ class Payex extends PaymentModule
         if (Tools::isSubmit('submit' . $this->name)) {
             $account_number = strval(Tools::getValue('PS_PAYEX_ACC_NUM'));
             $encryption_key = strval(Tools::getValue('PS_PAYEX_ENC_KEY'));
-            $return_url     = strval(Tools::getValue('PS_PAYEX_RETURN_URL'));
-            $cancel_url     = strval(Tools::getValue('PS_PAYEX_CANCEL_URL'));
-            $px_order       = strval(Tools::getValue('PS_PAYEX_PX_ORDER'));
-            $px_confined    = strval(Tools::getValue('PS_PAYEX_PX_CONFINED'));
+            $live_mode       = strval(Tools::getValue('PS_PAYEX_ENV'));
+            $desc     = strval(Tools::getValue('PS_PAYEX_DESC'));
             if ((!$account_number || empty($account_number) || !Validate::isInt($account_number)) && (!$encryption_key || empty($encryption_key))) $output .= $this->displayError($this->l('Invalid Configuration value')); else {
                 Configuration::updateValue('PS_PAYEX_ACC_NUM', $account_number);
                 Configuration::updateValue('PS_PAYEX_ENC_KEY', $encryption_key);
-                Configuration::updateValue('PS_PAYEX_RETURN_URL', $return_url);
-                Configuration::updateValue('PS_PAYEX_CANCEL_URL', $cancel_url);
-                Configuration::updateValue('PS_PAYEX_PX_ORDER', $px_order);
-                Configuration::updateValue('PS_PAYEX_PX_CONFINED', $px_confined);
+                Configuration::updateValue('PS_PAYEX_ENV', $live_mode);
+                Configuration::updateValue('PS_PAYEX_DESC', $desc);
                 $output .= $this->displayConfirmation($this->l('Settings updated'));
             }
         }
@@ -82,26 +81,34 @@ class Payex extends PaymentModule
                                                                 'name'     => 'PS_PAYEX_ENC_KEY',
                                                                 'size'     => 20,
                                                                 'required' => TRUE),
-                                                          array('type'     => 'text',
-                                                                'label'    => $this->l('Return URL'),
-                                                                'name'     => 'PS_PAYEX_RETURN_URL',
-                                                                'size'     => 20,
+                                                          array(
+                                                              'type'    => 'radio',
+                                                              'label'   => $this->l('Live Mode'),
+                                                              'desc'    => $this->l('Test or Live Mode'),
+                                                              'name'    => 'PS_PAYEX_ENV',
+                                                              'class'     => 't',
+                                                              'is_bool'   => true,
+                                                              'values'  => array(
+                                                                  array(
+                                                                      'id'    => 'live_on',
+                                                                      'value' => 1,
+                                                                      'label' => $this->l('Enabled')
+                                                                  ),
+                                                                  array(
+                                                                      'id'    => 'live_off',
+                                                                      'value' => 0,
+                                                                      'label' => $this->l('Disabled')
+                                                                  )
+                                                              ),
+                                                          ),
+                                                          array('type'     => 'textarea',
+                                                                'label'    => $this->l('Description'),
+                                                                'desc'     => 'Description to show on payex payment page',
+                                                                'name'     => 'PS_PAYEX_DESC',
+                                                                'cols'     => 60,
+                                                                'rows'     => 5,
                                                                 'required' => TRUE),
-                                                          array('type'     => 'text',
-                                                                'label'    => $this->l('Cancel URL'),
-                                                                'name'     => 'PS_PAYEX_CANCEL_URL',
-                                                                'size'     => 20,
-                                                                'required' => TRUE),
-                                                          array('type'     => 'text',
-                                                                'label'    => $this->l('PxOrderWSDL File Location'),
-                                                                'name'     => 'PS_PAYEX_PX_ORDER',
-                                                                'size'     => 20,
-                                                                'required' => TRUE),
-                                                          array('type'     => 'text',
-                                                                'label'    => $this->l('PxConfinedWSDL File Location'),
-                                                                'name'     => 'PS_PAYEX_PX_CONFINED',
-                                                                'size'     => 20,
-                                                                'required' => TRUE)),
+                                        ),
                                         'submit' => array('title' => $this->l('Save'),
                                                           'class' => 'button'));
 
@@ -130,10 +137,8 @@ class Payex extends PaymentModule
         // Load current value
         $helper->fields_value['PS_PAYEX_ACC_NUM']      = Configuration::get('PS_PAYEX_ACC_NUM');
         $helper->fields_value['PS_PAYEX_ENC_KEY']      = Configuration::get('PS_PAYEX_ENC_KEY');
-        $helper->fields_value['PS_PAYEX_RETURN_URL']   = Configuration::get('PS_PAYEX_RETURN_URL');
-        $helper->fields_value['PS_PAYEX_CANCEL_URL']   = Configuration::get('PS_PAYEX_CANCEL_URL');
-        $helper->fields_value['PS_PAYEX_PX_ORDER'] = Configuration::get('PS_PAYEX_PX_ORDER');
-        $helper->fields_value['PS_PAYEX_PX_CONFINED'] = Configuration::get('PS_PAYEX_PX_CONFINED');
+        $helper->fields_value['PS_PAYEX_ENV'] = Configuration::get('PS_PAYEX_ENV');
+        $helper->fields_value['PS_PAYEX_DESC'] = Configuration::get('PS_PAYEX_DESC');
 
         return $helper->generateForm($fields_form);
     }
@@ -141,13 +146,17 @@ class Payex extends PaymentModule
     public function hookPayment($params)
     {
         if (!$this->active) return;
-        global $smarty;
-//        return $this->display(__FILE__, 'payment.tpl');
+
+        $this->context->smarty->assign(array(
+                                       'path' => $this->_path
+                                       ));
+
+        return $this->display(__FILE__,'payment_button.tpl');
     }
 
     public function hookPaymentReturn($params)
     {
         if (!$this->active) return;
-//        return $this->display(__FILE__, 'confirmation.tpl');
+        return $this->display(__FILE__, 'confirmation.tpl');
     }
 }
