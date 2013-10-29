@@ -12,7 +12,7 @@ class Payex extends PaymentModule
         $this->tab           = 'payments_gateways';
         $this->version       = '1.0';
         $this->author        = 'Tan Phan - tanitct89@gmail.com';
-        $this->need_instance = 1;
+        $this->need_instance = 0;
 
         $this->currencies = TRUE;
         $this->currencies_mode = 'radio';

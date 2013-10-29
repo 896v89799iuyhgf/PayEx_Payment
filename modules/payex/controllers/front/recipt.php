@@ -10,7 +10,7 @@ class PayExReciptModuleFrontController extends ModuleFrontController
             Tools::redirectLink(__PS_BASE_URI__.'order.php?step=1');
         $authorized = false;
         foreach (Module::getPaymentModules() as $module)
-            if ($module['name'] == 'cashondelivery')
+            if ($module['name'] == 'payex')
             {
                 $authorized = true;
                 break;
