@@ -1,6 +1,7 @@
 <?php
-include_once("confined.php");
-include_once("pxorder.php");
+//echo $this->_path; exit;
+include_once(dirname(__FILE__)."/../../confined.php");
+include_once(dirname(__FILE__)."/../../pxorder.php");
 class PayExPayRedirectModuleFrontController extends ModuleFrontController {
     protected $accountNumber; // NB: Merchant account number REMEMBER TO SET MERCHANT ENCRYPTION KEY IN FUNCTIONS.PHP
     protected $purchaseOperation = 'SALE'; // AUTHORIZATION or SALE

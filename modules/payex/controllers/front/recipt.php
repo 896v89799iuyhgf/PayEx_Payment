@@ -1,5 +1,5 @@
 <?php
-include_once("../../pxorder.php");
+include_once(dirname(__FILE__)."/../../pxorder.php");
 
 class PayExReciptModuleFrontController extends ModuleFrontController
 {
@@ -17,10 +17,10 @@ class PayExReciptModuleFrontController extends ModuleFrontController
             }
         if (!$authorized)
             die(Tools::displayError('This payment method is not available.'));
-        $customer = new Customer($this->context->cart->id_customer);
+        $customer = new Customer((int)$this->context->cart->id_customer);
         if (!Validate::isLoadedObject($customer))
             Tools::redirectLink(__PS_BASE_URI__.'order.php?step=1');
-        $customer = new Customer((int)$this->context->cart->id_customer);
+//        $customer = new Customer((int)$this->context->cart->id_customer);
         $total = $this->context->cart->getOrderTotal(true, Cart::BOTH);
 
         //PayEX Implemantation
@@ -41,13 +41,27 @@ class PayExReciptModuleFrontController extends ModuleFrontController
 
         */
 //        var_dump($result);
+        $vars = array(
+            '{firstname}' => $customer->firstname,
+            '{lastname}' => $customer->lastname
+        );
         if ($result['transactionStatus'] == '0' || $result['transactionStatus'] == '6') {
             $payment_type = (int)Configuration::get('PS_OS_PAYMENT');
-        } else if ($result['transactionStatus'] == '5') {
-            $payment_type = (int)Configuration::get('PS_OS_ERROR');
         } else {
-            /* status 3 is in this section */
             $payment_type = (int)Configuration::get('PS_OS_ERROR');
+            /*Mail::Send((int)$customer->id_lang,
+                'payment_error',
+                Mail::l('Order Error', (int)$customer->id_lang),
+                $vars,
+                $customer->email,
+                $customer->firstname.' '.$customer->lastname,
+                null,
+                null,
+                null,
+                null,
+                _PS_MAIL_DIR_,
+                false,
+                (int)$this->context->shop->id);*/
         }
 
         $this->module->validateOrder((int)$this->context->cart->id, $payment_type, $total, $this->module->displayName, null, array(), null, false, $customer->secure_key);

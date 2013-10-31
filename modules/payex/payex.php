@@ -1,9 +1,6 @@
 <?php
 if (!defined('_PS_VERSION_')) exit;
 
-include_once("confined.php");
-include_once("pxorder.php");
-
 class Payex extends PaymentModule
 {
     public function __construct()
@@ -145,6 +142,16 @@ class Payex extends PaymentModule
 
     public function hookPayment($params)
     {
+        if (Configuration::get('PS_PAYEX_ENV') == 0) {
+            /* This is for TEST environment, remote wsdl files from PayEx */
+            define ("PxOrderWSDL", "https://test-external.payex.com/pxorder/pxorder.asmx?wsdl");
+            define ("PxConfinedWSDL", "https://test-confined.payex.com/PxConfined/pxorder.asmx?wsdl");
+        } else {
+            /* This is for PROD environment, remote wsdl files from PayEx*/
+            define ("PxOrderWSDL", "https://external.payex.com/pxorder/pxorder.asmx?wsdl");
+            define ("PxConfinedWSDL", "https://confined.payex.com/PxConfined/pxorder.asmx?wsdl");
+        }
+
         if (!$this->active) return;
 
         $this->context->smarty->assign(array(
