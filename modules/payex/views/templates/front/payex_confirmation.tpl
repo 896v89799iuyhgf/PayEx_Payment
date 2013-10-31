@@ -1,32 +1,28 @@
-{capture name=path}{l s='Shipping' mod='payex'}{/capture}
+{capture name=path}{l s='Order confirmation'}{/capture}
 {include file="$tpl_dir./breadcrumb.tpl"}
 
-<h2>{l s='Order summation' mod='payex'}</h2>
+<h1>{$tran_status}</h1>
 
 {assign var='current_step' value='payment'}
 {include file="$tpl_dir./order-steps.tpl"}
 
-<h3>{l s='PayEx payment' mod='payex'}</h3>
+{include file="$tpl_dir./errors.tpl"}
 
-<form action="{$link->getModuleLink('payex', 'validation', [], true)|escape:'html'}" method="post">
-    <input type="hidden" name="confirm" value="1" />
-    <p>
-        <img src="{$this_path_cod}payex.jpg" alt="{l s='Cash on delivery (COD) payment' mod='payex'}" style="float:left; margin: 0px 10px 5px 0px;" />
-        {l s='You have chosen PayEx method.' mod='payex'}
-        <br/><br />
-        {l s='The total amount of your order is' mod='payex'}
-        <span id="amount_{$currencies.0.id_currency}" class="price">{convertPrice price=$total}</span>
-        {if $use_taxes == 1}
-            {l s='(tax incl.)' mod='payex'}
-        {/if}
-    </p>
-    <p>
-        <br /><br />
-        <br /><br />
-        <b>{l s='Please confirm your order by clicking \'I confirm my order\'' mod='payex'}.</b>
-    </p>
-    <p class="cart_navigation" id="cart_navigation">
-        <a href="{$link->getPageLink('order', true)}?step=3" class="button_large">{l s='Other payment methods' mod='payex'}</a>
-        <input type="submit" value="{l s='I confirm my order' mod='payex'}" class="exclusive_large" />
-    </p>
-</form>
+<p> {l s='There was an issue with the transaction' mod='payex'}<br /><br />
+    {l s='Your order on' mod='payex'} <span class="bold">{$shop_name}</span> {l s='is not complete.' mod='payex'}
+    <br /><br />
+    {l s='You have chosen the payex method.' mod='payex'}
+    <br /><br />{l s='For any questions or for further information, please contact our' mod='payex'}
+    <a href="{$link->getPageLink('contact-form', true)|escape:'html'}">{l s='customer support' mod='payex'}</a>.
+</p>
+{$HOOK_PAYMENT_RETURN}
+
+<br />
+{if $is_guest}
+    <p>{l s='Your order ID is:'} <span class="bold">{$id_order_formatted}</span> . {l s='Your order ID has been sent via email.'}</p>
+    <a href="{$link->getPageLink('guest-tracking', true, NULL, "id_order={$reference_order}&email={$email}")|escape:'html'}" title="{l s='Follow my order'}"><img src="{$img_dir}icon/order.gif" alt="{l s='Follow my order'}" class="icon" /></a>
+    <a href="{$link->getPageLink('guest-tracking', true, NULL, "id_order={$reference_order}&email={$email}")|escape:'html'}" title="{l s='Follow my order'}">{l s='Follow my order'}</a>
+{else}
+    <a href="{$link->getPageLink('history', true)|escape:'html'}" title="{l s='Back to orders'}"><img src="{$img_dir}icon/order.gif" alt="{l s='Back to orders'}" class="icon" /></a>
+    <a href="{$link->getPageLink('history', true)|escape:'html'}" title="{l s='Back to orders'}">{l s='Back to orders'}</a>
+{/if}

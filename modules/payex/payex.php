@@ -37,7 +37,7 @@ class Payex extends PaymentModule
 
     public function uninstall()
     {
-        return parent::uninstall() && Configuration::deleteByName('PS_PAYEX') && Configuration::deleteByName('PS_PAYEX_ACC_NUM') && Configuration::deleteByName('PS_PAYEX_ENC_KEY') && Configuration::deleteByName('PS_PAYEX_ENV')&& Configuration::deleteByName('PS_PAYEX_DESC');
+        return parent::uninstall() && Configuration::deleteByName('PS_PAYEX') && Configuration::deleteByName('PS_PAYEX_ACC_NUM') && Configuration::deleteByName('PS_PAYEX_ENC_KEY') && Configuration::deleteByName('PS_PAYEX_ENV')&& Configuration::deleteByName('PS_PAYEX_DESC')&& Configuration::deleteByName('PS_PAYEX_TRANS');
     }
 
     public function getContent()
@@ -164,6 +164,14 @@ class Payex extends PaymentModule
     public function hookPaymentReturn($params)
     {
         if (!$this->active) return;
-        return $this->display(__FILE__, 'confirmation.tpl');
+        $status = Configuration::get('PS_PAYEX_TRANS');
+
+        if($status == 0 || $status == 6) {
+            return $this->display(__FILE__, 'order_confirmation.tpl');
+        } else if($status == 5) {
+            return $this->display(__FILE__, 'order_unsucess.tpl');
+        } else {
+            return $this->display(__FILE__, 'order_notcomplete.tpl');
+        }
     }
 }

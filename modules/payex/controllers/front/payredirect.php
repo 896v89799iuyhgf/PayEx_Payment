@@ -29,6 +29,7 @@ class PayExPayRedirectModuleFrontController extends ModuleFrontController {
         parent::init();
         $cart = $this->context->cart;
         $cart_details = $cart->getSummaryDetails(null, true);
+        Configuration::updateValue('PS_PAYEX_TRANS', 7);
 
         $this->accountumber = trim(Configuration::get('PS_PAYEX_ACC_NUM'));
         $this->returnUrl = $this->context->link->getModuleLink('payex', 'recipt');
@@ -48,7 +49,7 @@ class PayExPayRedirectModuleFrontController extends ModuleFrontController {
         $this->clientIdentifier = "USERAGENT=".$_SERVER['HTTP_USER_AGENT'];
         $params = array
         (
-            'accountNumber' => '60009120',
+            'accountNumber' => $this->accountumber,
             'purchaseOperation' => $this->purchaseOperation,
             'price' => $this->price,
             'priceArgList' => $this->priceArgList,

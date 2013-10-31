@@ -41,42 +41,24 @@ class PayExReciptModuleFrontController extends ModuleFrontController
 
         */
 //        var_dump($result);
-        $vars = array(
-            '{firstname}' => $customer->firstname,
-            '{lastname}' => $customer->lastname
-        );
+
         if ($result['transactionStatus'] == '0' || $result['transactionStatus'] == '6') {
             $payment_type = (int)Configuration::get('PS_OS_PAYMENT');
+            $this->module->validateOrder((int)$this->context->cart->id, $payment_type, $total, $this->module->displayName, null, array(), null, false, $customer->secure_key);
+        }else if($result['transactionStatus'] == '5'){
+            $payment_type = (int)Configuration::get('PS_OS_ERROR');
+            $this->module->validateOrder((int)$this->context->cart->id, $payment_type, $total, $this->module->displayName, null, array(), null, false, $customer->secure_key);
         } else {
             $payment_type = (int)Configuration::get('PS_OS_ERROR');
-            /*Mail::Send((int)$customer->id_lang,
-                'payment_error',
-                Mail::l('Order Error', (int)$customer->id_lang),
-                $vars,
-                $customer->email,
-                $customer->firstname.' '.$customer->lastname,
-                null,
-                null,
-                null,
-                null,
-                _PS_MAIL_DIR_,
-                false,
-                (int)$this->context->shop->id);*/
+            $this->module->validateOrder((int)$this->context->cart->id, $payment_type, $total, $this->module->displayName, null, array(), null, false, $customer->secure_key);
         }
 
-        $this->module->validateOrder((int)$this->context->cart->id, $payment_type, $total, $this->module->displayName, null, array(), null, false, $customer->secure_key);
-        Tools::redirectLink(__PS_BASE_URI__.'order-confirmation.php?key='.$customer->secure_key.'&id_cart='.(int)$this->context->cart->id.'&id_module='.(int)$this->module->id.'&id_order='.(int)$this->module->currentOrder);
+        Configuration::updateValue('PS_PAYEX_TRANS', $result['transactionStatus']);
+        Tools::redirectLink('index.php?controller=order-confirmation?key='.$customer->secure_key.'&id_cart='.(int)$this->context->cart->id.'&id_module='.(int)$this->module->id.'&id_order='.(int)$this->module->currentOrder);
     }
     public function initContent() {
         $this->display_column_left = false;
         parent::initContent();
-        $this->context->smarty->assign(array(
-                                       'total' => $this->context->cart->getOrderTotal(true, Cart::BOTH),
-                                       'this_path' => $this->module->getPathUri(),//keep for retro compat
-                                       'this_path_cod' => $this->module->getPathUri(),
-                                       'this_path_ssl' => Tools::getShopDomainSsl(true, true).__PS_BASE_URI__.'modules/'.$this->module->name.'/'
-                                       ));
-
         $this->setTemplate('payex_confirmation.tpl');
     }
 }
